@@ -202,6 +202,45 @@ namespace Microsoft.Maui.DeviceTests
 			});
 		}
 
+		[Fact]
+		public async Task WrappingLabelInPaddedLayoutIsNotClipped()
+		{
+			SetupBuilder();
+
+			const string text = "Every word of this label must stay visible";
+
+			// The width in pixels at which the text just fits on one line
+			var probe = await CreateHandlerAsync<LabelHandler>(new Label { Text = text });
+			var (textWidthPx, density) = await InvokeOnMainThreadAsync(() =>
+			{
+				var unspecified = MeasureSpecMode.Unspecified.MakeMeasureSpec(0);
+				probe.PlatformView.Measure(unspecified, unspecified);
+				return (probe.PlatformView.MeasuredWidth, probe.PlatformView.Context.GetDisplayDensity());
+			});
+
+			// Padding and content width are fractional in pixels. The content is measured
+			// at ceil(textWidthPx - 0.5) = textWidthPx, so the text fits on one line.
+			var label = new Label { Text = text };
+			var layout = new VerticalStackLayout
+			{
+				HorizontalOptions = LayoutOptions.Start,
+				WidthRequest = (textWidthPx + 20) / density,
+				Padding = new Thickness(10.25 / density, 0),
+				Children = { new VerticalStackLayout { label } }
+			};
+
+			await AttachAndRun(layout, (handler) =>
+			{
+				var textView = GetPlatformLabel((LabelHandler)label.Handler);
+				var textHeight = textView.Layout.Height;
+				var availableHeight = textView.Height - textView.CompoundPaddingTop - textView.CompoundPaddingBottom;
+
+				Assert.True(textHeight <= availableHeight,
+					$"Label measured at {textWidthPx}px was arranged at {textView.Width}px and wrapped to {textView.LineCount} lines " +
+					$"({textHeight}px) in a {availableHeight}px tall view, so its last line is clipped.");
+			});
+		}
+
 		TextView GetPlatformLabel(LabelHandler labelHandler) =>
 			labelHandler.PlatformView;
 

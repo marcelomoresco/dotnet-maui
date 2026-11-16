@@ -33,7 +33,7 @@ namespace Microsoft.Maui.DeviceTests
 		[InlineData(9)]
 		[InlineData(10)]
 		[InlineData(11)]
-		public async Task ArrangesContentWithoutOverlapAndWithProperSize(int columnCount)
+		public async Task ArrangesContentWithoutGapsAndWithProperSize(int columnCount)
 		{
 			EnsureHandlerCreated(builder =>
 			{
@@ -79,9 +79,10 @@ namespace Microsoft.Maui.DeviceTests
 						var pxFrame = arrangedFrames[i];
 						var expectedWidth = context.ToPixels(dpFrame.Width);
 
-						// This fails sometimes due to the way we arrange the content based on coordinates instead of size
-						// Assert.Equal(expectedWidth, pxFrame.Width);
-						Assert.True(pxFrame.Left == lastRight);
+						// Each column gets the pixel width it was measured with. A column whose position is
+						// rounded up can overlap the previous one by a pixel, but there is never a gap.
+						Assert.Equal(expectedWidth, pxFrame.Width);
+						Assert.InRange(lastRight - pxFrame.Left, 0, 1);
 
 						lastRight = pxFrame.Right;
 					}
