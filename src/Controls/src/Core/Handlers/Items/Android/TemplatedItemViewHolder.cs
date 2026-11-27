@@ -72,6 +72,7 @@ namespace Microsoft.Maui.Controls.Handlers.Items
 
 				// Actually create the native renderer
 				_itemContentView.RealizeContent(View, itemsView);
+				itemsView.TrackTemplatedItemView(View);
 
 				_selectedTemplate = template;
 			}

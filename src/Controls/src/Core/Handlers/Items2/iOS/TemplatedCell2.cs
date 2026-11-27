@@ -354,6 +354,11 @@ namespace Microsoft.Maui.Controls.Handlers.Items2
 
 				itemsView.AddLogicalChild(virtualView);
 
+				if (!needsContainer)
+				{
+					itemsView.TrackTemplatedItemView(virtualView);
+				}
+
 				if (this.Selected)
 				{
 					UpdateVisualStates();

@@ -47,6 +47,7 @@ namespace Microsoft.Maui.Controls.Handlers.Items2
 			Controller?.DisposeItemsSource();
 			Controller?.DisposeObserver();
 			base.DisconnectHandler(platformView);
+			ItemsView.DisconnectTemplatedItemViews();
 		}
 
 		protected override void ConnectHandler(UIView platformView)

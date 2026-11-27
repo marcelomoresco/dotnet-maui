@@ -28,6 +28,7 @@ namespace Microsoft.Maui.Controls.Handlers.Items
 		{
 			base.DisconnectHandler(platformView);
 			(platformView as IMauiRecyclerView<TItemsView>)?.TearDownOldElement(VirtualView);
+			VirtualView.DisconnectTemplatedItemViews();
 		}
 
 		protected override RecyclerView CreatePlatformView() =>

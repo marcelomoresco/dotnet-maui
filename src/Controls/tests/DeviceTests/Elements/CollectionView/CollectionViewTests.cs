@@ -86,6 +86,45 @@ namespace Microsoft.Maui.DeviceTests
 #endif
 		}
 
+#if ANDROID || IOS || MACCATALYST
+		[Fact]
+		public async Task DisconnectingHandlerDisconnectsCellViewsRemovedFromLogicalChildren()
+		{
+			SetupBuilder();
+
+			var createdViews = new List<Label>();
+			var collectionView = new CollectionView
+			{
+				HeightRequest = 300,
+				ItemTemplate = new DataTemplate(() =>
+				{
+					var label = new Label { HeightRequest = 50 };
+					label.SetBinding(Label.TextProperty, ".");
+					createdViews.Add(label);
+					return label;
+				}),
+				ItemsSource = Enumerable.Range(0, 40).Select(i => $"Item {i}").ToList()
+			};
+
+			await CreateHandlerAndAddToWindow<CollectionViewHandler>(collectionView, async _ =>
+			{
+				await AssertEventually(() => createdViews.Count > 0 && createdViews[0].Handler is not null);
+
+				collectionView.ScrollTo(39, position: ScrollToPosition.End, animate: false);
+				await Task.Delay(500);
+				collectionView.ScrollTo(0, position: ScrollToPosition.Start, animate: false);
+				await Task.Delay(500);
+				collectionView.ItemsSource = new List<string> { "New 0" };
+
+				await AssertEventually(() => createdViews.Any(view => view.Parent is null && view.Handler is not null));
+
+				collectionView.DisconnectHandlers();
+
+				Assert.All(createdViews, view => Assert.Null(view.Handler));
+			});
+		}
+#endif
+
 		[Fact(
 #if IOS || MACCATALYST || ANDROID
 		Skip = "Fails on iOS/macOS: https://github.com/dotnet/maui/issues/19240"

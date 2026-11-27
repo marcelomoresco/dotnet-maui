@@ -323,5 +323,32 @@ namespace Microsoft.Maui.Controls
 		{
 			return Handler is null || ItemsSource is null;
 		}
+
+		List<WeakReference<View>> _templatedItemViews;
+
+		internal void TrackTemplatedItemView(View view)
+		{
+			_templatedItemViews ??= new();
+
+			if (_templatedItemViews.Count == _templatedItemViews.Capacity)
+				_templatedItemViews.RemoveAll(reference => !reference.TryGetTarget(out _));
+
+			_templatedItemViews.Add(new(view));
+		}
+
+		internal void DisconnectTemplatedItemViews()
+		{
+			if (_templatedItemViews is null)
+				return;
+
+			var references = _templatedItemViews;
+			_templatedItemViews = null;
+
+			foreach (var reference in references)
+			{
+				if (reference.TryGetTarget(out var view) && (view.Parent is null || view.Parent == this))
+					view.DisconnectHandlers();
+			}
+		}
 	}
 }
